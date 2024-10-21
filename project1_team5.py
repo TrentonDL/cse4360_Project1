@@ -36,26 +36,28 @@ def read_in_coordinates_from_file(course):
         for s in split_fl:
             if(s == 'O'):
                 corner1 = corner2 = corner3 = []
-                if(len(coordinats) < 6):
+                
+                if(len(coordinats) < 6):                                                    # if there are less than 3 coordinates it will throw an Exception
                     raise Exception("Too Few Coordinates Given for obstacle")
-                corner1.append(coordinats[1])
+                
+                corner1.append(coordinats[1])                                               
                 corner1.append(coordinats[0])
-                verify_coordinates(corner1[0],corner1[1])
+                verify_coordinates(corner1[0],corner1[1])                                   # point 1 of ann obstacle
                 corner1.append(coordinats[3])
                 corner1.append(coordinats[2])
-                verify_coordinates(corner2[0],corner2[1])
+                verify_coordinates(corner2[0],corner2[1])                                   # point 2 of an obstacle
                 corner3.append(coordinats[5])
                 corner3.append(coordinats[4])
-                verify_coordinates(corner3[0],corner3[1])
-                create_obstacle(course, corner1, corner2, corner3)
+                verify_coordinates(corner3[0],corner3[1])                                   # point 3 of an obstacle
+                create_obstacle(course, corner1, corner2, corner3)                          # add obstacle
             elif(s == 'G'):
-                verify_coordinates(coordinats[1], coordinats[0])
+                verify_coordinates(coordinats[1], coordinats[0])                            # Goal location addition and verification
                 course[coordinats[1]][coordinats[0]] = GOAL_SYMBOL
             elif(s == 'S'):
-                verify_coordinates(coordinats[1], coordinats[0])
+                verify_coordinates(coordinats[1], coordinats[0])                            # Start location addition and verification
                 course[coordinats[1]][coordinats[0]] = START_SYMBOL
             else:
-                coordinats.append(int(s,10))
+                coordinats.append(int(s,10))                                                #if its not one of thoes 3 charaters or an integer it will throw an error
 
     file.close()
 
