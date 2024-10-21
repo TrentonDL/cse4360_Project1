@@ -27,6 +27,11 @@ def create_map():
         print_map(course)
     return course
 
+#verifies given coordinate is in the course area or else it will through an exception
+def verify_coordinates(length, height):
+    if length > GRIDSIZE_LENGTH or height > GRIDSIZE_HEIGHT:
+        raise Exception(f"Coordinate ({length} {height}) is invaild!")
+
 #chatgpt code to easily print 2d array
 def print_map(course):
     for row in course:
@@ -37,8 +42,10 @@ def add_obstacles(course):
     print("Adding Obstacles")
     #place start and goal symbols
     user_inp = input("Enter Start coordinate (Ex: 2 6): ").split()
+    verify_coordinates(int(user_inp[1]),int(user_inp[0]))
     course[int(user_inp[1])][int(user_inp[0])] = START_SYMBOL
     user_inp = input("Enter Goal coordinate (Ex: 2 6): ").split()
+    verify_coordinates(int(user_inp[1]),int(user_inp[0]))
     course[int(user_inp[1])][int(user_inp[0])] = GOAL_SYMBOL
     
     if DEBUG:
@@ -50,9 +57,11 @@ def add_obstacles(course):
         #gets 4 corners, numbers stored as an array. 2 6 is stored ['2', '6']
         #since all shapes are rectangles, we only need 3 corners
         corner1 = input("Enter top left corner coordinate (Ex: 2 6): ").split()
+        verify_coordinates(int(corner1[1]),int(corner1[0]))
         corner2 = input("Enter top right corner coordinate (Ex: 2 6): ").split()
+        verify_coordinates(int(corner2[1]),int(corner2[0]))
         corner3 = input("Enter bottom left corner coordinate (Ex: 2 6): ").split()
-        
+        verify_coordinates(int(corner3[1]),int(corner3[0]))
         
         create_obstacle(course, corner1, corner2, corner3)
         user_inp = input("Do you want to add another obstacle? Type n to end. ")
@@ -68,7 +77,10 @@ def create_obstacle(course, corner1, corner2, corner3):
         print_map(course)
 
 def main():
-    course = create_map()
-    add_obstacles(course)
+    try:
+        course = create_map()
+        add_obstacles(course)
+    except Exception as e:
+        print(e)
 
 main()
