@@ -2,6 +2,8 @@ from pybricks.pupdevices import Motor
 from pybricks.parameters import Port,Direction
 from pybricks.tools import wait
 #import numpy as np
+import os
+import string
 
 #Define Motors and their port connections
 l_Motor = Motor(Port.A,Direction.COUNTERCLOCKWISE)
@@ -18,6 +20,48 @@ START_SYMBOL = 'S'
 GOAL_SYMBOL = 'G'
 
 DEBUG = 1
+
+def getcwd(fname):
+    cwd = os.path.dirname(__file__)                                                 # get the current working directory
+    path = os.path.abspath(os.path.join(cwd,fname))                                 # get the real path of the filename and join with the cwd
+    return path                                                                     # return the path
+
+#add obstacles, goal and start coordinates via a file
+def read_in_coordinates_from_file(course):
+    fname = "coordinate.txt"                                                        
+    file = open(getcwd(fname))
+    for l in file:
+        split_fl = [num.strip() for num in l.split(' ')]
+        coordinats = []
+        for s in split_fl:
+            if(s == 'O'):
+                corner1 = corner2 = corner3 = []
+                if(len(coordinats) < 6):
+                    raise Exception("Too Few Coordinates Given for obstacle")
+                corner1.append(coordinats[1])
+                corner1.append(coordinats[0])
+                verify_coordinates(corner1[0],corner1[1])
+                corner1.append(coordinats[3])
+                corner1.append(coordinats[2])
+                verify_coordinates(corner2[0],corner2[1])
+                corner3.append(coordinats[5])
+                corner3.append(coordinats[4])
+                verify_coordinates(corner3[0],corner3[1])
+                create_obstacle(course, corner1, corner2, corner3)
+            elif(s == 'G'):
+                verify_coordinates(coordinats[1], coordinats[0])
+                course[coordinats[1]][coordinats[0]] = GOAL_SYMBOL
+            elif(s == 'S'):
+                verify_coordinates(coordinats[1], coordinats[0])
+                course[coordinats[1]][coordinats[0]] = START_SYMBOL
+            else:
+                coordinats.append(int(s,10))
+
+    file.close()
+
+    if DEBUG:
+        print(f"Course Updated from File {fname}\n")
+        print_map(course)
 
 #creates 2d array grid map full of Os to represent blank
 def create_map():
@@ -80,7 +124,8 @@ def main():
     try:
         course = create_map()
         add_obstacles(course)
+#        read_in_coordinates_from_file(course) #testing
     except Exception as e:
-        print(e)
+        print(f"Error: {e}")
 
 main()
