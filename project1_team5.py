@@ -125,8 +125,8 @@ def create_obstacle(course, corner1, corner2, corner3):
 def main():
     try:
         course = create_map()
-        add_obstacles(course)
-#        read_in_coordinates_from_file(course) #testing
+        #add_obstacles(course)
+        read_in_coordinates_from_file(course) #testing
     except Exception as e:
         print(f"Error: {e}")
 
