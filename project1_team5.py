@@ -1,4 +1,5 @@
 from pybricks.hubs import PrimeHub
+from pybricks.parameters import Axis
 from pybricks.pupdevices import Motor
 from pybricks.parameters import Port,Direction
 from pybricks.tools import wait
@@ -7,7 +8,7 @@ import os
 import string
 import dead_reckoning
 
-hub = PrimeHub()
+hub = PrimeHub(top_side=Axis.Z, front_side=Axis.X)
 
 #Define Motors and their port connections
 l_Motor = Motor(Port.A,Direction.COUNTERCLOCKWISE)
