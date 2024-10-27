@@ -17,12 +17,16 @@ r_Motor = Motor(Port.B, Direction.CLOCKWISE)
 #Define gridsize of the course
 GRIDSIZE_LENGTH = 16
 GRIDSIZE_HEIGHT = 10
+#Expanded gridsize dimensions
+EXP_GRIDSIZE_LENGTH = GRIDSIZE_LENGTH * 2
+EXP_GRIDSIZE_HEIGHT = GRIDSIZE_HEIGHT * 2
 
 #Define what symbols for blank space, obstacle space, start and goal
 BLANK_SYMBOL = '.'
 OBSTACLE_SYMBOL = 'X'
 START_SYMBOL = 'S'
 GOAL_SYMBOL = 'G'
+PATH_SYMBOL = "P"
 
 DEBUG = 1
 
@@ -35,34 +39,38 @@ def getcwd(fname):
 def read_in_coordinates_from_file(course):
     fname = "coordinate.txt"                                                        
     file = open(getcwd(fname))
+    obs_num = 1 #keeps track of how many obstacles we add
     for l in file:
         split_fl = [num.strip() for num in l.split(' ')]
-        coordinats = []
+        coordinates = []
         for s in split_fl:
             if(s == 'O'):
-                corner1 = corner2 = corner3 = []
+                corner1 = []
+                corner2 = []
+                corner3 = []
                 
-                if(len(coordinats) < 6):                                                    # if there are less than 3 coordinates it will throw an Exception
+                if(len(coordinates) < 6):                                                    # if there are less than 3 coordinates it will throw an Exception
                     raise Exception("Too Few Coordinates Given for obstacle")
                 
-                corner1.append(coordinats[1])                                               
-                corner1.append(coordinats[0])
+                corner1.append(coordinates[0])                                               
+                corner1.append(coordinates[1])
                 verify_coordinates(corner1[0],corner1[1])                                   # point 1 of ann obstacle
-                corner1.append(coordinats[3])
-                corner1.append(coordinats[2])
+                corner2.append(coordinates[2])
+                corner2.append(coordinates[3])
                 verify_coordinates(corner2[0],corner2[1])                                   # point 2 of an obstacle
-                corner3.append(coordinats[5])
-                corner3.append(coordinats[4])
-                verify_coordinates(corner3[0],corner3[1])                                   # point 3 of an obstacle
+                corner3.append(coordinates[4])
+                corner3.append(coordinates[5])
+                verify_coordinates(corner3[0],corner3[1])                                 # point 3 of an obstacle
                 create_obstacle(course, corner1, corner2, corner3)                          # add obstacle
+                obs_num += 1
             elif(s == 'G'):
-                verify_coordinates(coordinats[1], coordinats[0])                            # Goal location addition and verification
-                course[coordinats[1]][coordinats[0]] = GOAL_SYMBOL
+                verify_coordinates(coordinates[1], coordinates[0])                            # Goal location addition and verification
+                course[coordinates[1]][coordinates[0]] = GOAL_SYMBOL
             elif(s == 'S'):
-                verify_coordinates(coordinats[1], coordinats[0])                            # Start location addition and verification
-                course[coordinats[1]][coordinats[0]] = START_SYMBOL
+                verify_coordinates(coordinates[1], coordinates[0])                            # Start location addition and verification
+                course[coordinates[1]][coordinates[0]] = START_SYMBOL
             else:
-                coordinats.append(int(s,10))                                                #if its not one of thoes 3 charaters or an integer it will throw an error
+                coordinates.append(int(s,10))                                                #if its not one of thoes 3 charaters or an integer it will throw an error
 
     file.close()
 
@@ -72,15 +80,15 @@ def read_in_coordinates_from_file(course):
 
 #creates 2d array grid map full of Os to represent blank
 def create_map():
-    course = [[BLANK_SYMBOL for x in range(GRIDSIZE_LENGTH)] for x in range (GRIDSIZE_HEIGHT)]
+    course = [[BLANK_SYMBOL for x in range(GRIDSIZE_LENGTH)] for y in range (GRIDSIZE_HEIGHT)]
     #course = np.full((GRIDSIZE_LENGTH, GRIDSIZE_HEIGHT), BLANK_SYMBOL)
     if DEBUG:
         print_map(course)
     return course
 
 #verifies given coordinate is in the course area or else it will through an exception
-def verify_coordinates(length, height):
-    if length > GRIDSIZE_LENGTH or height > GRIDSIZE_HEIGHT:
+def verify_coordinates(height, length):
+    if length >= GRIDSIZE_LENGTH or height >= GRIDSIZE_HEIGHT:
         raise Exception(f"Coordinate ({length} {height}) is invaild!")
 
 #chatgpt code to easily print 2d array
@@ -121,11 +129,95 @@ def add_obstacles(course):
 def create_obstacle(course, corner1, corner2, corner3):
     for row in range(int(corner1[1]), int(corner3[1]) + 1):
         for col in range(int(corner1[0]), int(corner2[0]) + 1):
-            course[row][col] = OBSTACLE_SYMBOL
+            course[row][col] = (OBSTACLE_SYMBOL)
         
     if DEBUG:
         print("Obstacle added, new map is")
         print_map(course)
+
+def expand_map(course):
+    expCourse = [[BLANK_SYMBOL for x in range(GRIDSIZE_LENGTH*2)] for y in range(GRIDSIZE_HEIGHT*2)]
+    
+    #for every symbol in original course, create a copy in the x+1, y+1, and x+1 y+1 directions 
+    for row in range(GRIDSIZE_HEIGHT):
+        for col in range(GRIDSIZE_LENGTH):
+            symbol = course[row][col]
+            expCourse[2*row][2*col] = symbol
+            expCourse[2*row+1][2*col] = symbol
+            expCourse[2*row][2*col+1] = symbol
+            expCourse[2*row+1][2*col+1] = symbol
+            
+    if DEBUG:
+        print("\nCourse expanded, expCourse is ")
+        print_map(expCourse)
+        
+    return expCourse
+
+def brushfire(course):
+    #triple nested for loop yayyyy, whats time complexity anyway
+    #1st loop will iterate waves, fill in numbers 1-Length
+    #we use legnth to ensure the wave travels the entire course, should never need to use all 16, but could need up to it
+    #2nd and 3rd loops are the 2d array
+    for wave in range (1, GRIDSIZE_LENGTH):
+        for row in range(GRIDSIZE_HEIGHT):
+            for col in range(GRIDSIZE_LENGTH):
+                
+                #if we find an obstacle or the prev wave number, we want to mark every square around it with the next number
+                if (course[row][col] == OBSTACLE_SYMBOL or course[row][col] == str(wave - 1)):
+                    
+                    #place above if not on first row; dont replace obstacle symbols
+                    if (row > 0):
+                        if course[row-1][col] == str(wave):
+                           pass#course[row-1][col] = PATH_SYMBOL
+                        elif course[row-1][col] == BLANK_SYMBOL:
+                            course[row-1][col] = str(wave)
+                        
+                        #if this is the top right part of the obstacle, then add a top right corner
+                        if (col < (GRIDSIZE_LENGTH-1)) and ((course[row][col+1] == BLANK_SYMBOL) or (course[row][col+1] == str(wave))):
+                            course[row-1][col+1] = str(wave)
+                        
+                        #if this is the top left part of obstacle, then add a top left corner
+                        if (col > 0) and ((course[row][col-1] == BLANK_SYMBOL) or (course[row][col-1] == str(wave))):
+                            course[row-1][col-1] = str(wave)
+                            
+                    #place to the left if not on first column
+                    if (col > 0):
+                        if course[row][col-1] == str(wave):
+                           pass#course[row][col-1] = PATH_SYMBOL
+                        elif course[row][col-1] == BLANK_SYMBOL:
+                            course[row][col-1] = str(wave)
+                    
+                    #place below if not on last row
+                    if (row < (GRIDSIZE_HEIGHT-1)):
+                        if course[row+1][col] == str(wave):
+                           pass#course[row+1][col] = PATH_SYMBOL
+                        elif course[row+1][col] == BLANK_SYMBOL:
+                            course[row+1][col] = str(wave)
+                        
+                        #if this is the bottom right part of the obstacle, then add a bottom right corner 
+                        if (col < (GRIDSIZE_LENGTH-1)) and ((course[row][col+1] == BLANK_SYMBOL) or (course[row][col+1] == str(wave))):
+                            course[row+1][col+1] = str(wave)
+                            
+                        #if this is the bottom left part of obstacle, then add a bottom left corner
+                        if (col > 0) and ((course[row][col-1] == BLANK_SYMBOL) or (course[row][col-1] == str(wave))):
+                            course[row+1][col-1] = str(wave)
+                    
+                    #place to the right if not on last column
+                    if (col < (GRIDSIZE_LENGTH-1)):
+                        if course[row][col+1] == str(wave):
+                            pass#course[row][col+1] = PATH_SYMBOL
+                        elif course[row][col+1] == BLANK_SYMBOL:
+                            course[row][col+1] = str(wave)
+        
+        if DEBUG:
+            print(f"Wave {wave} now completed, map is")
+            print_map(course)        
+       
+    
+    if DEBUG:
+        print("\nbrushfire done, course is now")
+        print_map(course)
+
 
 def main():
     try:
@@ -134,5 +226,11 @@ def main():
         read_in_coordinates_from_file(course) #testing
     except Exception as e:
         print(f"Error: {e}")
+    
+    #Course created, convert from 1ft squares to 6in squares
+    #course = expand_map(course)
+    
+    #Course expanded, now apply brushfire to paint a path
+    course = brushfire(course)
 
 main()
