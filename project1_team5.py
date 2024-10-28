@@ -197,11 +197,13 @@ def expand_obstacles(course):
 def find_path(course, xStart, yStart, xGoal, yGoal):
     
     #current coordinate
-    xCurr = xStart
-    yCurr = yStart
+    #I messed up all of my x and y coordinates throughtout this whole thing.
+    #it works though, so theres that I guess
+    xCurr = yStart
+    yCurr = xStart
     curDist = int(course[xStart][yStart])
     path = []
-    path.append((xCurr,yCurr))
+    path.append((yCurr,xCurr))
     
     while (course[xCurr][yCurr] != '0'):
         if (course[xCurr][yCurr+1] != OBSTACLE_SYMBOL and int(course[xCurr][yCurr+1]) < curDist):
@@ -214,12 +216,12 @@ def find_path(course, xStart, yStart, xGoal, yGoal):
             yCurr -= 1
         
         curDist = int(course[xCurr][yCurr])
-        path.append((xCurr,yCurr))
+        path.append((yCurr,xCurr))
     
     if DEBUG:
         print("Path array finished, current path is ")
         print(path)
-    
+
     
 
 def main():
