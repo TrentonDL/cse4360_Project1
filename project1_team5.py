@@ -96,35 +96,6 @@ def print_map(course):
     for row in course:
         print(' '.join(row))
 
-#uses a while loop to add all obstacles to the course
-def add_obstacles(course):
-    print("Adding Obstacles")
-    #place start and goal symbols
-    user_inp = input("Enter Start coordinate (Ex: 2 6): ").split()
-    verify_coordinates(int(user_inp[1]),int(user_inp[0]))
-    course[int(user_inp[1])][int(user_inp[0])] = START_SYMBOL
-    user_inp = input("Enter Goal coordinate (Ex: 2 6): ").split()
-    verify_coordinates(int(user_inp[1]),int(user_inp[0]))
-    course[int(user_inp[1])][int(user_inp[0])] = GOAL_SYMBOL
-    
-    if DEBUG:
-        print("Start and Goal added")
-        print_map(course)
-    
-    corner1 = corner2 = corner3 = 0
-    while (user_inp != 'n' and user_inp != 'N'):
-        #gets 4 corners, numbers stored as an array. 2 6 is stored ['2', '6']
-        #since all shapes are rectangles, we only need 3 corners
-        corner1 = input("Enter top left corner coordinate (Ex: 2 6): ").split()
-        verify_coordinates(int(corner1[1]),int(corner1[0]))
-        corner2 = input("Enter top right corner coordinate (Ex: 2 6): ").split()
-        verify_coordinates(int(corner2[1]),int(corner2[0]))
-        corner3 = input("Enter bottom left corner coordinate (Ex: 2 6): ").split()
-        verify_coordinates(int(corner3[1]),int(corner3[0]))
-        
-        create_obstacle(course, corner1, corner2, corner3)
-        user_inp = input("Do you want to add another obstacle? Type n to end. ")
-
 #takes input of 3 corners and creates the obstacle on the course
 def create_obstacle(course, corner1, corner2, corner3):
     for row in range(int(corner1[1]), int(corner3[1]) + 1):
@@ -152,74 +123,6 @@ def expand_map(course):
         print_map(expCourse)
         
     return expCourse
-
-def brushfire(course):
-    #triple nested for loop yayyyy, whats time complexity anyway
-    #1st loop will iterate waves, fill in numbers 1-Length
-    #we use legnth to ensure the wave travels the entire course, should never need to use all 16, but could need up to it
-    #2nd and 3rd loops are the 2d array
-    for wave in range (1, GRIDSIZE_LENGTH):
-        for row in range(GRIDSIZE_HEIGHT):
-            for col in range(GRIDSIZE_LENGTH):
-                
-                #if we find an obstacle or the prev wave number, we want to mark every square around it with the next number
-                if (course[row][col] == OBSTACLE_SYMBOL or course[row][col] == str(wave - 1)):
-                    
-                    #place above if not on first row; dont replace obstacle symbols
-                    if (row > 0):
-                        if course[row-1][col] == str(wave):
-                           pass#course[row-1][col] = PATH_SYMBOL
-                        elif course[row-1][col] == BLANK_SYMBOL:
-                            course[row-1][col] = str(wave)
-                        
-                        #if this is the top right part of the obstacle, then add a top right corner
-                        if (col < (GRIDSIZE_LENGTH-1)) and ((course[row][col+1] == BLANK_SYMBOL) or (course[row][col+1] == str(wave))):
-                            course[row-1][col+1] = str(wave)
-                        
-                        #if this is the top left part of obstacle, then add a top left corner
-                        if (col > 0) and ((course[row][col-1] == BLANK_SYMBOL) or (course[row][col-1] == str(wave))):
-                            course[row-1][col-1] = str(wave)
-                            
-                    #place to the left if not on first column
-                    if (col > 0):
-                        if course[row][col-1] == str(wave):
-                           pass#course[row][col-1] = PATH_SYMBOL
-                        elif course[row][col-1] == BLANK_SYMBOL:
-                            course[row][col-1] = str(wave)
-                    
-                    #place below if not on last row
-                    if (row < (GRIDSIZE_HEIGHT-1)):
-                        if course[row+1][col] == str(wave):
-                           pass#course[row+1][col] = PATH_SYMBOL
-                        elif course[row+1][col] == BLANK_SYMBOL:
-                            course[row+1][col] = str(wave)
-                        
-                        #if this is the bottom right part of the obstacle, then add a bottom right corner 
-                        if (col < (GRIDSIZE_LENGTH-1)) and ((course[row][col+1] == BLANK_SYMBOL) or (course[row][col+1] == str(wave))):
-                            course[row+1][col+1] = str(wave)
-                            
-                        #if this is the bottom left part of obstacle, then add a bottom left corner
-                        if (col > 0) and ((course[row][col-1] == BLANK_SYMBOL) or (course[row][col-1] == str(wave))):
-                            course[row+1][col-1] = str(wave)
-                    
-                    #place to the right if not on last column
-                    if (col < (GRIDSIZE_LENGTH-1)):
-                        if course[row][col+1] == str(wave):
-                            pass#course[row][col+1] = PATH_SYMBOL
-                        elif course[row][col+1] == BLANK_SYMBOL:
-                            course[row][col+1] = str(wave)
-        
-        if DEBUG:
-            print(f"Wave {wave} now completed, map is")
-            print_map(course)        
-       
-    
-    if DEBUG:
-        print("\nbrushfire done, course is now")
-        print_map(course)
-    
-    return course
-
 
 def goal_fire(course):
     xGoal = 0
@@ -295,21 +198,13 @@ def expand_obstacles(course):
 def main():
     try:
         course = create_map()
-        #add_obstacles(course)
-        read_in_coordinates_from_file(course) #testing
+        read_in_coordinates_from_file(course) 
+        #expand obstacles for padding
+        course = expand_obstacles(course)
+    
+        #next attempt to path course
+        course = goal_fire(course)
     except Exception as e:
         print(f"Error: {e}")
-    
-    #Course created, convert from 1ft squares to 6in squares
-    #course = expand_map(course)
-    
-    #Course expanded, now apply brushfire to paint a path
-    #course = brushfire(course) #couldnt get to fully work
-    
-    #expand obstacles for padding
-    course = expand_obstacles(course)
-    
-    #next attempt to path course
-    course = goal_fire(course)
 
 main()
