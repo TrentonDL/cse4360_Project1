@@ -1,18 +1,17 @@
-from pybricks.hubs import PrimeHub
-from pybricks.parameters import Axis
-from pybricks.pupdevices import Motor
-from pybricks.parameters import Port,Direction
-from pybricks.tools import wait
-#import numpy as np
+#from pybricks.hubs import PrimeHub
+#from pybricks.parameters import Axis
+#from pybricks.pupdevices import Motor
+#from pybricks.parameters import Port,Direction
+#from pybricks.tools import wait
 import os
 import string
-import dead_reckoning
+#import dead_reckoning
 
-hub = PrimeHub(top_side=Axis.Z, front_side=Axis.X)
+#hub = PrimeHub(top_side=Axis.Z, front_side=Axis.X)
 
 #Define Motors and their port connections
-l_Motor = Motor(Port.A,Direction.COUNTERCLOCKWISE)
-r_Motor = Motor(Port.B, Direction.CLOCKWISE)
+#l_Motor = Motor(Port.A,Direction.COUNTERCLOCKWISE)
+#r_Motor = Motor(Port.B, Direction.CLOCKWISE)
 
 #Define gridsize of the course
 GRIDSIZE_LENGTH = 16
@@ -91,7 +90,6 @@ def read_in_coordinates_from_file(course):
 #creates 2d array grid map full of Os to represent blank
 def create_map():
     course = [[BLANK_SYMBOL for x in range(GRIDSIZE_LENGTH)] for y in range (GRIDSIZE_HEIGHT)]
-    #course = np.full((GRIDSIZE_LENGTH, GRIDSIZE_HEIGHT), BLANK_SYMBOL)
     if DEBUG:
         print_map(course)
     return course
@@ -134,9 +132,7 @@ def expand_map(course):
         
     return expCourse
 
-def goal_fire(course):
-    xGoal = 0
-    yGoal = 0
+def goal_fire(course, xGoal, yGoal):
     dist = 0
     queue = []
     
@@ -203,21 +199,21 @@ def find_path(course, xStart, yStart, xGoal, yGoal):
     #current coordinate
     xCurr = xStart
     yCurr = yStart
-    curDist = course[xStart][yStart]
+    curDist = int(course[xStart][yStart])
     path = []
     path.append((xCurr,yCurr))
     
     while (course[xCurr][yCurr] != '0'):
-        if (course[xCurr][yCurr+1] < curDist):
+        if (course[xCurr][yCurr+1] != OBSTACLE_SYMBOL and int(course[xCurr][yCurr+1]) < curDist):
             yCurr += 1
-        elif (course[xCurr+1][yCurr] < curDist):
+        elif (course[xCurr+1][yCurr] != OBSTACLE_SYMBOL and int(course[xCurr+1][yCurr]) < curDist):
             xCurr += 1
-        elif (course[xCurr-1][yCurr] < curDist):
+        elif (course[xCurr-1][yCurr] != OBSTACLE_SYMBOL and int(course[xCurr-1][yCurr]) < curDist):
             xCurr -= 1
-        elif (course[xCurr][yCurr-1] < curDist):
+        elif (course[xCurr][yCurr-1] != OBSTACLE_SYMBOL and int(course[xCurr][yCurr-1]) < curDist):
             yCurr -= 1
         
-        curDist = course[xCurr][yCurr]
+        curDist = int(course[xCurr][yCurr])
         path.append((xCurr,yCurr))
     
     if DEBUG:
@@ -246,7 +242,7 @@ def main():
     #next attempt to path course
     course = goal_fire(course, xGoal, yGoal)
     
-    #path = find_path(course, xStart, yStart, xGoal, yGoal)
-    dead_reckoning.move_to_goal(path)
+    path = find_path(course, xStart, yStart, xGoal, yGoal)
+    #dead_reckoning.move_to_goal(path)
 
 main()
