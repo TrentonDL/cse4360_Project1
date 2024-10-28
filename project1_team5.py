@@ -6,7 +6,7 @@ from pybricks.tools import wait
 #import numpy as np
 import os
 import string
-import dead_reckoning
+from dead_reckoning import move_to_goal
 
 hub = PrimeHub(top_side=Axis.Z, front_side=Axis.X)
 
@@ -231,22 +231,17 @@ def main():
         course = create_map()
         #add_obstacles(course)
         xStart, yStart, xGoal, yGoal = read_in_coordinates_from_file(course)
+        
+        #expand obstacles for padding
+        course = expand_obstacles(course)
+        
+        #next attempt to path course
+        course = goal_fire(course, xGoal, yGoal)
+        
+        #path = find_path(course, xStart, yStart, xGoal, yGoal)
+        move_to_goal(path)
+
     except Exception as e:
         print(f"Error: {e}")
     
-    #Course created, convert from 1ft squares to 6in squares
-    #course = expand_map(course)
-    
-    #Course expanded, now apply brushfire to paint a path
-    #course = brushfire(course) #couldnt get to fully work
-    
-    #expand obstacles for padding
-    course = expand_obstacles(course)
-    
-    #next attempt to path course
-    course = goal_fire(course, xGoal, yGoal)
-    
-    #path = find_path(course, xStart, yStart, xGoal, yGoal)
-    dead_reckoning.move_to_goal(path)
-
 main()

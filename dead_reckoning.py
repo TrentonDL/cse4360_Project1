@@ -72,6 +72,7 @@ class PID:
 
 def move_to_goal(waypoints=list):
     hub = PrimeHub(top_side=Axis.Z, front_side=Axis.X)
+    hub.imu.reset_heading()
 
     #Define Motors and their port connections
     l_Motor = Motor(Port.A,Direction.COUNTERCLOCKWISE)
@@ -110,6 +111,7 @@ def move_to_goal(waypoints=list):
         # next waypoint if robot reached the current waypoint
         curr_pos = dead_reckoning(hub, l_Motor, r_Motor, curr_pos[0], curr_pos[1], curr_angle)
         if curr_pos[0] == x_des and curr_pos[1] == y_des:
+            hub.speaker.beep()
             curr_waypoint_idx += 1
 
     l_Motor.run(0)
