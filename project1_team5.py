@@ -219,6 +219,35 @@ def brushfire(course):
         print_map(course)
 
 
+def goalfire(course):
+    xGoal = 0
+    yGoal = 0
+    dist = 0
+    queue = []
+    
+    for row in range(GRIDSIZE_HEIGHT):
+        for col in range(GRIDSIZE_LENGTH):
+            if course[row][col] == GOAL_SYMBOL:
+                xGoal = col
+                yGoal = row
+                break
+    
+    queue.append((xGoal, yGoal, 0))
+    while (queue):
+        col, row, dist = queue.pop(0)
+        if ((row > 0 and row < GRIDSIZE_HEIGHT) and (col > 0 and col < GRIDSIZE_LENGTH)):
+            if course[row][col] == BLANK_SYMBOL or course[row][col] == GOAL_SYMBOL:
+                course[row][col] = str(dist)
+                queue.append((col-1, row, dist+1))
+                queue.append((col+1, row, dist+1))
+                queue.append((col, row+1, dist+1))
+                queue.append((col, row-1, dist+1))
+                
+    if DEBUG:
+        print("Q is now empty, map is ")
+        print_map(course)
+    
+
 def main():
     try:
         course = create_map()
@@ -231,6 +260,9 @@ def main():
     #course = expand_map(course)
     
     #Course expanded, now apply brushfire to paint a path
-    course = brushfire(course)
+    #course = brushfire(course) #couldnt get to fully work
+    
+    #next attempt to path course
+    course = goalfire(course)
 
 main()
