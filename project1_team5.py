@@ -247,5 +247,6 @@ def main():
     course = goal_fire(course, xGoal, yGoal)
     
     #path = find_path(course, xStart, yStart, xGoal, yGoal)
+    dead_reckoning.move_to_goal(path)
 
 main()

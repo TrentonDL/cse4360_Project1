@@ -6,8 +6,8 @@ from pybricks.pupdevices import Motor
 from pybricks.parameters import Port,Direction
 from pybricks.tools import wait
 
-BASE_SPEED = 0.5
-MAX_SPEED = 1.0
+BASE_SPEED = 100
+MAX_SPEED = 500
 
 def dead_reckoning(hub=PrimeHub,l_motor=Motor,r_motor=Motor, pos_x=float, pos_y=float, theta=float):
     robot_heading = hub.imu.heading
@@ -104,10 +104,13 @@ def move_to_goal(waypoints=list):
         lmotor_speed = max(min(lmotor_speed, MAX_SPEED), -MAX_SPEED)
         rmotor_speed = max(min(rmotor_speed, MAX_SPEED), -MAX_SPEED)
 
+        l_Motor.run(lmotor_speed)
+        r_Motor.run(rmotor_speed)
+
         # next waypoint if robot reached the current waypoint
         curr_pos = dead_reckoning(hub, l_Motor, r_Motor, curr_pos[0], curr_pos[1], curr_angle)
         if curr_pos[0] == x_des and curr_pos[1] == y_des:
-            curr_waypoint_idx += 1 
+            curr_waypoint_idx += 1
 
-
-
+    l_Motor.run(0)
+    r_Motor.run(0) 
