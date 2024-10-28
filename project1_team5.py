@@ -37,6 +37,10 @@ def getcwd(fname):
 
 #add obstacles, goal and start coordinates via a file
 def read_in_coordinates_from_file(course):
+    xStart = 0
+    yStart = 0
+    xGoal = 0
+    yGoal = 0
     fname = "coordinate.txt"                                                        
     file = open(getcwd(fname))
     obs_num = 1 #keeps track of how many obstacles we add
@@ -66,9 +70,13 @@ def read_in_coordinates_from_file(course):
             elif(s == 'G'):
                 verify_coordinates(coordinates[1], coordinates[0])                            # Goal location addition and verification
                 course[coordinates[1]][coordinates[0]] = GOAL_SYMBOL
+                xGoal = coordinates[0]
+                yGoal = coordinates[1]
             elif(s == 'S'):
                 verify_coordinates(coordinates[1], coordinates[0])                            # Start location addition and verification
                 course[coordinates[1]][coordinates[0]] = START_SYMBOL
+                xStart = coordinates[0]
+                yStart = coordinates[1]
             else:
                 coordinates.append(int(s,10))                                                #if its not one of thoes 3 charaters or an integer it will throw an error
 
@@ -77,6 +85,8 @@ def read_in_coordinates_from_file(course):
     if DEBUG:
         print(f"Course Updated from File {fname}\n")
         print_map(course)
+    
+    return (xStart, yStart, xGoal, yGoal)
 
 #creates 2d array grid map full of Os to represent blank
 def create_map():
@@ -130,18 +140,11 @@ def goal_fire(course):
     dist = 0
     queue = []
     
-    for row in range(GRIDSIZE_HEIGHT):
-        for col in range(GRIDSIZE_LENGTH):
-            if course[row][col] == GOAL_SYMBOL:
-                xGoal = col
-                yGoal = row
-                break
-    
-    queue.append((xGoal, yGoal, 0))
+    queue.append((xGoal, yGoal, dist))
     while (queue):
         col, row, dist = queue.pop(0)
-        if ((row > 0 and row < GRIDSIZE_HEIGHT) and (col > 0 and col < GRIDSIZE_LENGTH)):
-            if course[row][col] == BLANK_SYMBOL or course[row][col] == GOAL_SYMBOL:
+        if ((row >= 0 and row < GRIDSIZE_HEIGHT) and (col >= 0 and col < GRIDSIZE_LENGTH)):
+            if course[row][col] == BLANK_SYMBOL or course[row][col] == GOAL_SYMBOL or course[row][col] == START_SYMBOL:
                 course[row][col] = str(dist)
                 queue.append((col-1, row, dist+1))
                 queue.append((col+1, row, dist+1))
@@ -195,16 +198,54 @@ def expand_obstacles(course):
         
     return course
 
+def find_path(course, xStart, yStart, xGoal, yGoal):
+    
+    #current coordinate
+    xCurr = xStart
+    yCurr = yStart
+    curDist = course[xStart][yStart]
+    path = []
+    path.append((xCurr,yCurr))
+    
+    while (course[xCurr][yCurr] != '0'):
+        if (course[xCurr][yCurr+1] < curDist):
+            yCurr += 1
+        elif (course[xCurr+1][yCurr] < curDist):
+            xCurr += 1
+        elif (course[xCurr-1][yCurr] < curDist):
+            xCurr -= 1
+        elif (course[xCurr][yCurr-1] < curDist):
+            yCurr -= 1
+        
+        curDist = course[xCurr][yCurr]
+        path.append((xCurr,yCurr))
+    
+    if DEBUG:
+        print("Path array finished, current path is ")
+        print(path)
+    
+    
+
 def main():
     try:
         course = create_map()
-        read_in_coordinates_from_file(course) 
-        #expand obstacles for padding
-        course = expand_obstacles(course)
-    
-        #next attempt to path course
-        course = goal_fire(course)
+        #add_obstacles(course)
+        xStart, yStart, xGoal, yGoal = read_in_coordinates_from_file(course)
     except Exception as e:
         print(f"Error: {e}")
+    
+    #Course created, convert from 1ft squares to 6in squares
+    #course = expand_map(course)
+    
+    #Course expanded, now apply brushfire to paint a path
+    #course = brushfire(course) #couldnt get to fully work
+    
+    #expand obstacles for padding
+    course = expand_obstacles(course)
+    
+    #next attempt to path course
+    course = goal_fire(course, xGoal, yGoal)
+    
+    #path = find_path(course, xStart, yStart, xGoal, yGoal)
 
 main()
