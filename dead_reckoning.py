@@ -1,10 +1,9 @@
-import math
-import time
+import umath
 from pybricks.hubs import PrimeHub
 from pybricks.parameters import Axis
 from pybricks.pupdevices import Motor
 from pybricks.parameters import Port,Direction
-from pybricks.tools import wait
+from pybricks.tools import wait,StopWatch
 
 BASE_SPEED = 100
 MAX_SPEED = 500
@@ -35,14 +34,14 @@ class PID:
 
         self.prev_error = 0.0
         self.integral = 0.0
-        self.prev_time = time.time()
+        self.prev_time = tools.StopWatch()
 
     def update(self, curr_angle, curr_time):
         # calculate angle error
         error = self.setpoint - curr_angle
 
         # normalize error to be in range of [-pi, pi]
-        error = (error + math.pi) % (2 * math.pi) - math.pi
+        error = (error + umath.pi) % (2 * umath.pi) - umath.pi
 
         delta_time = curr_time - (self.prev_time if self.prev_time else curr_time)
         
@@ -81,19 +80,19 @@ def move_to_goal(waypoints=list):
     pid = PID(kp=1.0, ki=0.1, kd=0.05, desired_angle=0)
     start_x, start_y = waypoints.pop()
     curr_pos = dead_reckoning(hub, l_Motor, r_Motor, start_x, start_y,0.0)
-    curr_time = time.time()
+    curr_time = tools.StopWatch.time
 
     curr_waypoint_idx = 0
     while curr_waypoint_idx < len(waypoints):
         x_des, y_des = waypoints[curr_waypoint_idx]
 
-        desired_angle = math.atan2(curr_pos[1]-y_des,curr_pos[0]-x_des)
+        desired_angle = umath.atan2(curr_pos[1]-y_des,curr_pos[0]-x_des)
         pid.set_target(desired_angle)
-        curr_angle = hub.imu.heading* (math.pi*180)
+        curr_angle = hub.imu.heading* (umath.pi*180)
 
         pid_output = pid.update(curr_angle, curr_time)
         angle_error = desired_angle - curr_angle
-        angle_error = (angle_error + math.pi) % (2 * math.pi) - math.pi
+        angle_error = (angle_error + umath.pi) % (2 * umath.pi) - umath.pi
 
         if angle_error > 0:
             lmotor_speed = BASE_SPEED - pid_output

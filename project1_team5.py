@@ -1,18 +1,6 @@
-from pybricks.hubs import PrimeHub
-from pybricks.parameters import Axis
-from pybricks.pupdevices import Motor
-from pybricks.parameters import Port,Direction
-from pybricks.tools import wait
-#import numpy as np
-import os
-import string
+from uio import StringIO
+from coordinate import TEXT
 from dead_reckoning import move_to_goal
-
-hub = PrimeHub(top_side=Axis.Z, front_side=Axis.X)
-
-#Define Motors and their port connections
-l_Motor = Motor(Port.A,Direction.COUNTERCLOCKWISE)
-r_Motor = Motor(Port.B, Direction.CLOCKWISE)
 
 #Define gridsize of the course
 GRIDSIZE_LENGTH = 16
@@ -30,19 +18,13 @@ PATH_SYMBOL = "P"
 
 DEBUG = 1
 
-def getcwd(fname):
-    cwd = os.path.dirname(__file__)                                                 # get the current working directory
-    path = os.path.abspath(os.path.join(cwd,fname))                                 # get the real path of the filename and join with the cwd
-    return path                                                                     # return the path
-
 #add obstacles, goal and start coordinates via a file
 def read_in_coordinates_from_file(course):
     xStart = 0
     yStart = 0
     xGoal = 0
     yGoal = 0
-    fname = "coordinate.txt"                                                        
-    file = open(getcwd(fname))
+    file = StringIO(TEXT)
     obs_num = 1 #keeps track of how many obstacles we add
     for l in file:
         split_fl = [num.strip() for num in l.split(' ')]
@@ -80,10 +62,8 @@ def read_in_coordinates_from_file(course):
             else:
                 coordinates.append(int(s,10))                                                #if its not one of thoes 3 charaters or an integer it will throw an error
 
-    file.close()
-
     if DEBUG:
-        print(f"Course Updated from File {fname}\n")
+        print(f"Course Updated from File\n")
         print_map(course)
     
     return (xStart, yStart, xGoal, yGoal)
@@ -91,7 +71,6 @@ def read_in_coordinates_from_file(course):
 #creates 2d array grid map full of Os to represent blank
 def create_map():
     course = [[BLANK_SYMBOL for x in range(GRIDSIZE_LENGTH)] for y in range (GRIDSIZE_HEIGHT)]
-    #course = np.full((GRIDSIZE_LENGTH, GRIDSIZE_HEIGHT), BLANK_SYMBOL)
     if DEBUG:
         print_map(course)
     return course
@@ -134,9 +113,7 @@ def expand_map(course):
         
     return expCourse
 
-def goal_fire(course):
-    xGoal = 0
-    yGoal = 0
+def goal_fire(course, xGoal, yGoal):
     dist = 0
     queue = []
     
@@ -203,21 +180,21 @@ def find_path(course, xStart, yStart, xGoal, yGoal):
     #current coordinate
     xCurr = xStart
     yCurr = yStart
-    curDist = course[xStart][yStart]
+    curDist = int(course[xStart][yStart])
     path = []
     path.append((xCurr,yCurr))
     
     while (course[xCurr][yCurr] != '0'):
-        if (course[xCurr][yCurr+1] < curDist):
+        if (course[xCurr][yCurr+1] != OBSTACLE_SYMBOL and int(course[xCurr][yCurr+1]) < curDist):
             yCurr += 1
-        elif (course[xCurr+1][yCurr] < curDist):
+        elif (course[xCurr+1][yCurr] != OBSTACLE_SYMBOL and int(course[xCurr+1][yCurr]) < curDist):
             xCurr += 1
-        elif (course[xCurr-1][yCurr] < curDist):
+        elif (course[xCurr-1][yCurr] != OBSTACLE_SYMBOL and int(course[xCurr-1][yCurr]) < curDist):
             xCurr -= 1
-        elif (course[xCurr][yCurr-1] < curDist):
+        elif (course[xCurr][yCurr-1] != OBSTACLE_SYMBOL and int(course[xCurr][yCurr-1]) < curDist):
             yCurr -= 1
         
-        curDist = course[xCurr][yCurr]
+        curDist = int(course[xCurr][yCurr])
         path.append((xCurr,yCurr))
     
     if DEBUG:
