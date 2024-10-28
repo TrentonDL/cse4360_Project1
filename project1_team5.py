@@ -217,9 +217,11 @@ def brushfire(course):
     if DEBUG:
         print("\nbrushfire done, course is now")
         print_map(course)
+    
+    return course
 
 
-def goalfire(course):
+def goal_fire(course):
     xGoal = 0
     yGoal = 0
     dist = 0
@@ -246,7 +248,49 @@ def goalfire(course):
     if DEBUG:
         print("Q is now empty, map is ")
         print_map(course)
+
+    return course
+
+def expand_obstacles(course):
+    queue = []
     
+    for row in range(GRIDSIZE_HEIGHT):
+        for col in range(GRIDSIZE_LENGTH):
+            if course[row][col] == OBSTACLE_SYMBOL:
+                queue.append((row,col))
+                
+    while (queue):
+        row, col = queue.pop(0)
+        
+        #expand obstacles left, and if possible diagonally up left and down left
+        if row > 0:
+            course[row-1][col] = OBSTACLE_SYMBOL
+            if col > 0:
+                course[row-1][col-1] = OBSTACLE_SYMBOL
+            if col < GRIDSIZE_LENGTH:
+                course[row-1][col+1] = OBSTACLE_SYMBOL
+        
+        #expand obstacles right, and if possible diagonally up right and down right
+        if row < GRIDSIZE_HEIGHT:
+            course[row+1][col] = OBSTACLE_SYMBOL
+            if col > 0:
+                course[row+1][col-1] = OBSTACLE_SYMBOL
+            if col < GRIDSIZE_LENGTH:
+                course[row+1][col+1] = OBSTACLE_SYMBOL
+        
+        #expand obstacles up
+        if col > 0:
+            course[row][col-1] = OBSTACLE_SYMBOL
+        
+        #expand obstacles down
+        if col < GRIDSIZE_HEIGHT:
+            course[row][col+1] = OBSTACLE_SYMBOL
+    
+    if DEBUG:
+        print("Obstacles expanded, map is now")    
+        print_map(course)
+        
+    return course
 
 def main():
     try:
@@ -262,7 +306,10 @@ def main():
     #Course expanded, now apply brushfire to paint a path
     #course = brushfire(course) #couldnt get to fully work
     
+    #expand obstacles for padding
+    course = expand_obstacles(course)
+    
     #next attempt to path course
-    course = goalfire(course)
+    course = goal_fire(course)
 
 main()
