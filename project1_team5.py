@@ -199,6 +199,8 @@ def find_path(course, xStart, yStart, xGoal, yGoal):
         curDist = int(course[xCurr][yCurr])
         path.append((yCurr,xCurr))
     
+    return path
+    
     if DEBUG:
         print("Path array finished, current path is ")
         print(path)
@@ -217,10 +219,10 @@ def main():
         #next attempt to path course
         course = goal_fire(course, xGoal, yGoal)
         
-        #path = find_path(course, xStart, yStart, xGoal, yGoal)
-        move_to_goal(path)
-
+        path = find_path(course, xStart, yStart, xGoal, yGoal)
+        
     except Exception as e:
         print(f"Error: {e}")
-    
+
+    move_to_goal(path)
 main()
