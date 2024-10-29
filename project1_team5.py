@@ -1,7 +1,7 @@
 from uio import StringIO
 from coordinate import TEXT
 from dead_reckoning import move_to_goal,dead_reckoning
-from copy import copy, deepcopy
+import copy
 
 #Define gridsize of the course
 GRIDSIZE_LENGTH = 16
@@ -177,13 +177,12 @@ def expand_obstacles(course):
     return course
 
 def find_path(course, xStart, yStart, xGoal, yGoal):
-    
     #current coordinate
     #I messed up all of my x and y coordinates throughtout this whole thing.
     #it works though, so theres that I guess
     xCurr = yStart
     yCurr = xStart
-    curDist = int(course[xStart][yStart])
+    curDist = int(course[xCurr][yCurr])
     path = []
     path.append((yCurr,xCurr))
     
@@ -209,9 +208,14 @@ def find_path(course, xStart, yStart, xGoal, yGoal):
 
 def overlay_path(course, path):
     
+    y, x = path.pop(0)
+    course[x][y] = START_SYMBOL
+    
     while (path):
-        x, y = path.pop(0)
+        y, x = path.pop(0)
         course[x][y] = PATH_SYMBOL
+    
+    course[yGoal][xGoal] = GOAL_SYMBOL
     
     if DEBUG:
         print("The clean path is ")
@@ -232,8 +236,11 @@ def main():
         #next attempt to path course
         course = goal_fire(course, xGoal, yGoal)
         
+        #calculate path coordinates from start to goal
         path = find_path(course, xStart, yStart, xGoal, yGoal)
-        clean_course = overlay_path(empty_course, path.copy())
+        
+        #print a clean path for visual purposes
+        clean_course = overlay_path(empty_course, path.copy(), xGoal, yGoal)
         
     except Exception as e:
         print(f"Error: {e}")
