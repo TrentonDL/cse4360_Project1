@@ -37,22 +37,22 @@ def read_in_coordinates_from_file(course):
                 
                 corner1.append(coordinates[0])                                               
                 corner1.append(coordinates[1])
-                verify_coordinates(corner1[0],corner1[1])                                   # point 1 of ann obstacle
+                #verify_coordinates(corner1[0],corner1[1])                                   # point 1 of ann obstacle
                 corner2.append(coordinates[2])
                 corner2.append(coordinates[3])
-                verify_coordinates(corner2[0],corner2[1])                                   # point 2 of an obstacle
+                #verify_coordinates(corner2[0],corner2[1])                                   # point 2 of an obstacle
                 corner3.append(coordinates[4])
                 corner3.append(coordinates[5])
-                verify_coordinates(corner3[0],corner3[1])                                 # point 3 of an obstacle
+                #verify_coordinates(corner3[0],corner3[1])                                 # point 3 of an obstacle
                 create_obstacle(course, corner1, corner2, corner3)                          # add obstacle
                 obs_num += 1
             elif(s == 'G'):
-                verify_coordinates(coordinates[1], coordinates[0])                            # Goal location addition and verification
+                #verify_coordinates(coordinates[1], coordinates[0])                            # Goal location addition and verification
                 course[coordinates[1]][coordinates[0]] = GOAL_SYMBOL
                 xGoal = coordinates[0]
                 yGoal = coordinates[1]
             elif(s == 'S'):
-                verify_coordinates(coordinates[1], coordinates[0])                            # Start location addition and verification
+                #verify_coordinates(coordinates[1], coordinates[0])                            # Start location addition and verification
                 course[coordinates[1]][coordinates[0]] = START_SYMBOL
                 xStart = coordinates[0]
                 yStart = coordinates[1]
@@ -74,7 +74,7 @@ def create_map():
 
 #verifies given coordinate is in the course area or else it will through an exception
 def verify_coordinates(height, length):
-    if length >= GRIDSIZE_LENGTH or height >= GRIDSIZE_HEIGHT:
+    if length >= GRIDSIZE_HEIGHT or height >= GRIDSIZE_LENGTH:
         raise Exception(f"Coordinate ({length} {height}) is invaild!")
 
 #chatgpt code to easily print 2d array
