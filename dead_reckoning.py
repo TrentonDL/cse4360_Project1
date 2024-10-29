@@ -3,41 +3,46 @@ from pybricks.hubs import PrimeHub
 from pybricks.parameters import Axis
 from pybricks.pupdevices import Motor
 from pybricks.parameters import Port,Direction
+from pybricks.robotics import DriveBase
 from pybricks.tools import wait,StopWatch
 
-BASE_SPEED = 100
-MAX_SPEED = 500
+BASE_SPEED = 100.0
+MAX_SPEED = 500.0
 
-def dead_reckoning(hub, l_motor, r_motor, pos_x=0.0, pos_y=0.0, theta=0.0, wheel_radius=1):
+def dead_reckoning(hub, l_motor, r_motor, pos_x, pos_y, theta, last_time, wheel_radius=1):
     # Current robot heading
-    robot_heading = hub.imu.heading()  # Assuming heading() gives heading in degrees
-    l_speed = l_motor.speed  # Speed of left motor
-    r_speed = r_motor.speed  # Speed of right motor
+    robot_heading = hub.imu.heading()
+    
+    # Get motor speeds and convert to radians per second
+    l_speed = float(l_motor.speed())  # Assume this is in degrees per second
+    r_speed = float(r_motor.speed())
+    l_speed_rad = umath.radians(l_speed)  # Convert to radians/sec
+    r_speed_rad = umath.radians(r_speed)
+    
+    # Calculate current time and delta time (time elapsed since last update)
+    dt = last_time  # Time in seconds
 
-    # Convert heading to radians for calculations
+    # Update theta to the current robot heading (convert heading to radians)
     robot_heading_rad = umath.radians(robot_heading)
     theta_rad = umath.radians(theta)
-
-    # Update theta to the current robot heading
     theta_dot = robot_heading_rad - theta_rad
-    theta += theta_dot
+    theta += theta_dot  # Update theta based on robot heading
 
     # Calculate forward velocity
-    velocity = wheel_radius * (l_speed + r_speed) / 2.0
+    velocity = wheel_radius * (l_speed_rad + r_speed_rad) / 2.0
 
-    # Calculate changes in x and y
+    # Calculate changes in x and y using forward velocity and time elapsed
     x_dot = velocity * umath.cos(theta)
     y_dot = velocity * umath.sin(theta)
-
-    # Update positions
-    pos_x += x_dot
-    pos_y += y_dot
+    
+    # Update positions based on velocities and delta time
+    pos_x += x_dot * float(dt)
+    pos_y += y_dot * float(dt)
 
     # Convert theta back to degrees if required
     theta_deg = umath.degrees(theta)
 
-    return pos_x, pos_y, theta_deg
-
+    return pos_x, pos_y, theta_deg, dt  # Include curr_time for next update's reference
 
 class PID:
     def __init__(self, kp, ki, kd, desired_angle, sample_time=0.01):
@@ -89,20 +94,24 @@ def move_to_goal(waypoints):
     hub.imu.reset_heading(0)
 
     #Define Motors and their port connections
-    l_Motor = Motor(Port.A,Direction.COUNTERCLOCKWISE)
-    r_Motor = Motor(Port.B, Direction.CLOCKWISE)
+    l_Motor = Motor(Port.A,Direction.COUNTERCLOCKWISE,reset_angle=True)
+    r_Motor = Motor(Port.B, Direction.CLOCKWISE, reset_angle=True)
 
+    drive_base = DriveBase(l_Motor,r_Motor,wheel_diameter=54, axle_track=127)
+    drive_base.use_gyro(True)
     pid = PID(kp=1.0, ki=0.1, kd=0.05, desired_angle=0.0)
-    
-    curr_time = StopWatch.time
 
     for w in range(len(waypoints)):
+        hub.speaker.beep(duration=10)
         x_des = waypoints[w][0]
         y_des = waypoints[w][1]
-        curr_pos = dead_reckoning(hub, l_Motor, r_Motor, x_des, y_des,0.0)
+        curr_time = StopWatch()
+        curr_pos = dead_reckoning(hub, l_Motor, r_Motor, x_des, y_des,theta=0.0,last_time=0, wheel_radius=54.0)
+        print(f"x_des = {x_des} y_des = {y_des}\ncurr_x = {curr_pos[0]} curr_y = {curr_pos[1]}\n")
+    
         while x_des != curr_pos[0] and y_des != curr_pos[1]:
-            curr_time -= StopWatch.time
-
+            
+            
             desired_angle = umath.atan2(curr_pos[1]-y_des,curr_pos[0]-x_des)
             pid.set_target(desired_angle)
             curr_angle = hub.imu.heading * (umath.pi*180)
@@ -110,7 +119,7 @@ def move_to_goal(waypoints):
             pid_output = pid.update(curr_angle, curr_time)
             angle_error = desired_angle - curr_angle
             angle_error = (angle_error + umath.pi) % (2.0 * umath.pi) - umath.pi
-
+            
             if angle_error > 0:
                 lmotor_speed = BASE_SPEED - pid_output
                 rmotor_speed = BASE_SPEED + pid_output
@@ -125,9 +134,7 @@ def move_to_goal(waypoints):
             r_Motor.run(rmotor_speed)
 
             # next waypoint if robot reached the current waypoint
-            curr_pos = dead_reckoning(hub, l_Motor, r_Motor, curr_pos[0], curr_pos[1], curr_angle)
-
-        hub.speaker.beep()
+            curr_pos = dead_reckoning(hub, l_Motor, r_Motor, curr_pos[0], curr_pos[1], curr_angle,curr_time.time(),wheel_radius=54.0)
 
     l_Motor.run(0)
     r_Motor.run(0) 
