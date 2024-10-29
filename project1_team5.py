@@ -257,7 +257,7 @@ def main():
     empty_course = copy_2d_array(course)
     
     #expand obstacles for padding
-    course = expand_obstacles(course)
+    #course = expand_obstacles(course)
     
     #next attempt to path course
     course = goal_fire(course, xGoal, yGoal)
