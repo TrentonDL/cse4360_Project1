@@ -1,6 +1,6 @@
-from uio import StringIO
+#from uio import StringIO
 from coordinate import TEXT
-from dead_reckoning import move_to_goal,dead_reckoning
+#from dead_reckoning import move_to_goal,dead_reckoning
 import copy
 
 #Define gridsize of the course
@@ -25,7 +25,7 @@ def read_in_coordinates_from_file(course):
     yStart = 0
     xGoal = 0
     yGoal = 0
-    file = StringIO(TEXT)
+    file = open("coordinates.txt")
     obs_num = 1 #keeps track of how many obstacles we add
     for l in file:
         split_fl = [num.strip() for num in l.split(' ')]
@@ -63,6 +63,8 @@ def read_in_coordinates_from_file(course):
             else:
                 coordinates.append(int(s,10))                                                #if its not one of thoes 3 charaters or an integer it will throw an error
 
+    file.close()
+    
     if DEBUG:
         print(f"Course Updated from File\n")
         print_map(course)
@@ -206,7 +208,7 @@ def find_path(course, xStart, yStart, xGoal, yGoal):
     return path
 
 
-def overlay_path(course, path):
+def overlay_path(course, path, xGoal, yGoal ):
     
     y, x = path.pop(0)
     course[x][y] = START_SYMBOL
@@ -220,6 +222,33 @@ def overlay_path(course, path):
     if DEBUG:
         print("The clean path is ")
         print_map(course)
+        
+#chatgpt code to copy a 2darray because we cant use copy or deepcopy
+def copy_2d_array(original):
+    # Get the number of rows and columns
+    rows = len(original)
+    cols = len(original[0]) if rows > 0 else 0
+
+    # Create a new 2D array with the same dimensions
+    copied_array = [[0] * cols for _ in range(rows)]
+
+    # Copy each element from the original array to the new array
+    for i in range(rows):
+        for j in range(cols):
+            copied_array[i][j] = original[i][j]
+
+    return copied_array
+
+#chatgpt code to copy a 1darray because we cant use copy
+def copy_1d_array(original):
+    # Create a new array with the same length
+    copied_array = [0] * len(original)
+    
+    # Copy each element from the original array to the new array
+    for i in range(len(original)):
+        copied_array[i] = original[i]
+    
+    return copied_array
     
 
 def main(): 
@@ -228,7 +257,7 @@ def main():
         #add_obstacles(course)
         xStart, yStart, xGoal, yGoal = read_in_coordinates_from_file(course)
         
-        empty_course = copy.deepcopy(course)
+        empty_course = copy_2d_array(course)
         
         #expand obstacles for padding
         course = expand_obstacles(course)
@@ -240,7 +269,7 @@ def main():
         path = find_path(course, xStart, yStart, xGoal, yGoal)
         
         #print a clean path for visual purposes
-        clean_course = overlay_path(empty_course, path.copy(), xGoal, yGoal)
+        clean_course = overlay_path(empty_course, copy_1d_array(path), xGoal, yGoal)
         
     except Exception as e:
         print(f"Error: {e}")
