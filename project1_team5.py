@@ -1,7 +1,7 @@
 from uio import StringIO
 from coordinate import TEXT
 from dead_reckoning import move_to_goal,dead_reckoning
-import copy
+#import copy
 
 #Define gridsize of the course
 GRIDSIZE_LENGTH = 16
@@ -228,7 +228,7 @@ def main():
         #add_obstacles(course)
         xStart, yStart, xGoal, yGoal = read_in_coordinates_from_file(course)
         
-        empty_course = copy.deepcopy(course)
+        #empty_course = copy.deepcopy(course)
         
         #expand obstacles for padding
         course = expand_obstacles(course)
@@ -240,10 +240,10 @@ def main():
         path = find_path(course, xStart, yStart, xGoal, yGoal)
         
         #print a clean path for visual purposes
-        clean_course = overlay_path(empty_course, path.copy(), xGoal, yGoal)
+        #clean_course = overlay_path(empty_course, path.copy(), xGoal, yGoal)
         
     except Exception as e:
         print(f"Error: {e}")
-
-    #move_to_goal(path)
+    
+    move_to_goal(path)
 main()
