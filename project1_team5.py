@@ -1,6 +1,6 @@
 from uio import StringIO
 from coordinate import TEXT
-from dead_reckoning import move_to_goal
+from dead_reckoning import move_to_goal,dead_reckoning
 
 #Define gridsize of the course
 GRIDSIZE_LENGTH = 16
