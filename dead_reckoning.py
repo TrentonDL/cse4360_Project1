@@ -86,7 +86,7 @@ class PID:
         return 0.0 # if no sample time has elapsed return 0
     
     def set_target(self, setpoint):
-        self.setpoint = setpoint
+        self.setpoint = umath.degrees(setpoint)
         self.integral = 0.0
 
 def move_to_goal(waypoints):
@@ -99,42 +99,25 @@ def move_to_goal(waypoints):
 
     drive_base = DriveBase(l_Motor,r_Motor,wheel_diameter=54, axle_track=127)
     drive_base.use_gyro(True)
-    pid = PID(kp=1.0, ki=0.1, kd=0.05, desired_angle=0.0)
+    curr_pos = waypoints[0]
 
     for w in range(len(waypoints)):
         hub.speaker.beep(duration=10)
-        x_des = waypoints[w][0]
-        y_des = waypoints[w][1]
-        curr_time = StopWatch()
-        curr_pos = dead_reckoning(hub, l_Motor, r_Motor, x_des, y_des,theta=0.0,last_time=0, wheel_radius=54.0)
-        print(f"x_des = {x_des} y_des = {y_des}\ncurr_x = {curr_pos[0]} curr_y = {curr_pos[1]}\n")
-    
-        while x_des != curr_pos[0] and y_des != curr_pos[1]:
-            
-            
-            desired_angle = umath.atan2(curr_pos[1]-y_des,curr_pos[0]-x_des)
-            pid.set_target(desired_angle)
-            curr_angle = hub.imu.heading * (umath.pi*180)
+        pos_des = waypoints[w]
 
-            pid_output = pid.update(curr_angle, curr_time)
-            angle_error = desired_angle - curr_angle
-            angle_error = (angle_error + umath.pi) % (2.0 * umath.pi) - umath.pi
-            
-            if angle_error > 0:
-                lmotor_speed = BASE_SPEED - pid_output
-                rmotor_speed = BASE_SPEED + pid_output
-            else:
-                lmotor_speed = BASE_SPEED + pid_output
-                rmotor_speed = BASE_SPEED - pid_output
+        x_dist = pos_des[0] - curr_pos[0]
+        y_dist = pos_des[1] - curr_pos[1]
+        angle = umath.atan2(y_dist,x_dist)
+        angle = umath.degrees(angle)
+        c_dist = umath.sqrt(umath.pow(x_dist,2) + umath.pow(y_dist,2))
+        c_dist = c_dist * 304.8
 
-            lmotor_speed = max(min(lmotor_speed, MAX_SPEED), -MAX_SPEED)
-            rmotor_speed = max(min(rmotor_speed, MAX_SPEED), -MAX_SPEED)
+        if curr_pos != pos_des:
+            drive_base.turn(angle)
+            drive_base.straight(c_dist)
 
-            l_Motor.run(lmotor_speed)
-            r_Motor.run(rmotor_speed)
-
-            # next waypoint if robot reached the current waypoint
-            curr_pos = dead_reckoning(hub, l_Motor, r_Motor, curr_pos[0], curr_pos[1], curr_angle,curr_time.time(),wheel_radius=54.0)
-
-    l_Motor.run(0)
-    r_Motor.run(0) 
+        curr_dist = drive_base.distance()
+        if curr_dist == c_dist:
+            hub.speaker.beep(duration=10)
+            drive_base.reset
+            curr_pos = pos_des
