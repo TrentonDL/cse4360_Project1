@@ -1,13 +1,10 @@
 from uio import StringIO
 from coordinate import TEXT
-from dead_reckoning import move_to_goal,dead_reckoning
+from dead_reckoning import move_to_goal
 
 #Define gridsize of the course
 GRIDSIZE_LENGTH = 16
 GRIDSIZE_HEIGHT = 10
-#Expanded gridsize dimensions
-EXP_GRIDSIZE_LENGTH = GRIDSIZE_LENGTH * 2
-EXP_GRIDSIZE_HEIGHT = GRIDSIZE_HEIGHT * 2
 
 #Define what symbols for blank space, obstacle space, start and goal
 BLANK_SYMBOL = '.'
@@ -16,7 +13,7 @@ START_SYMBOL = 'S'
 GOAL_SYMBOL = 'G'
 PATH_SYMBOL = "P"
 
-DEBUG = 1
+DEBUG = 0
 
 #add obstacles, goal and start coordinates via a file
 def read_in_coordinates_from_file(course):
@@ -94,24 +91,6 @@ def create_obstacle(course, corner1, corner2, corner3):
     if DEBUG:
         print("Obstacle added, new map is")
         print_map(course)
-
-def expand_map(course):
-    expCourse = [[BLANK_SYMBOL for x in range(GRIDSIZE_LENGTH*2)] for y in range(GRIDSIZE_HEIGHT*2)]
-    
-    #for every symbol in original course, create a copy in the x+1, y+1, and x+1 y+1 directions 
-    for row in range(GRIDSIZE_HEIGHT):
-        for col in range(GRIDSIZE_LENGTH):
-            symbol = course[row][col]
-            expCourse[2*row][2*col] = symbol
-            expCourse[2*row+1][2*col] = symbol
-            expCourse[2*row][2*col+1] = symbol
-            expCourse[2*row+1][2*col+1] = symbol
-            
-    if DEBUG:
-        print("\nCourse expanded, expCourse is ")
-        print_map(expCourse)
-        
-    return expCourse
 
 def goal_fire(course, xGoal, yGoal):
     dist = 0
@@ -204,7 +183,6 @@ def find_path(course, xStart, yStart, xGoal, yGoal):
     
     return path
 
-
 def overlay_path(course, path, xGoal, yGoal ):
     
     y, x = path.pop(0)
@@ -219,6 +197,8 @@ def overlay_path(course, path, xGoal, yGoal ):
     if DEBUG:
         print("The clean path is ")
         print_map(course)
+    
+    return course
         
 #chatgpt code to copy a 2darray because we cant use copy or deepcopy
 def copy_2d_array(original):
@@ -247,29 +227,27 @@ def copy_1d_array(original):
     
     return copied_array
     
-
 def main(): 
-    # try:
-    course = create_map()
-    #add_obstacles(course)
-    xStart, yStart, xGoal, yGoal = read_in_coordinates_from_file(course)
-    
-    empty_course = copy_2d_array(course)
-    
-    #expand obstacles for padding
-    #course = expand_obstacles(course)
-    
-    #next attempt to path course
-    course = goal_fire(course, xGoal, yGoal)
-    
-    #calculate path coordinates from start to goal
-    path = find_path(course, xStart, yStart, xGoal, yGoal)
-    
-    #print a clean path for visual purposes
+    try:
+        course = create_map()
+        #add_obstacles(course)
+        xStart, yStart, xGoal, yGoal = read_in_coordinates_from_file(course)
         
-    # except Exception as e:
-    #     print(f"Error: {e}")
-    clean_course = overlay_path(empty_course, copy_1d_array(path), xGoal, yGoal)
-    move_to_goal(path)
+        empty_course = copy_2d_array(course)
+        
+        #next attempt to path course
+        course = goal_fire(course, xGoal, yGoal)
+        
+        #calculate path coordinates from start to goal
+        path = find_path(course, xStart, yStart, xGoal, yGoal)
+        
+        #print a clean path for visual purposes
+        clean_course = overlay_path(empty_course, copy_1d_array(path), xGoal, yGoal)
+        print_map(clean_course)
+
+        #move robot along given path
+        move_to_goal(path)    
+    except Exception as e:
+        print(f"Error: {e}")
     
 main()
