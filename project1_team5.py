@@ -2,6 +2,11 @@ from uio import StringIO
 from coordinate import TEXT
 from dead_reckoning import move_to_goal
 
+#I mixed up my x and y coordinates in some places in the earlier functions, which is why in some of the later function I have to swap them -Dylan
+
+#We used 3 functions written by chatgpt: print_map, copy_2d_array, and copy_1d_array
+#These functions only assist in visualizing the 2D array for debugging puproses and do not affect the path planning in any way
+
 #Define gridsize of the course
 GRIDSIZE_LENGTH = 16
 GRIDSIZE_HEIGHT = 10
@@ -92,6 +97,10 @@ def create_obstacle(course, corner1, corner2, corner3):
         print("Obstacle added, new map is")
         print_map(course)
 
+#utilizes a method similar to brushfire
+#It marks the goal coordinate with a 0, then adds all 4 coordinates around the point to the queue with 1 higher distance
+#if its a valid square, it places the distance number on that square that will represent the distance from that square to the goal
+#it will go until the entire grid is filled with their distance to the goal
 def goal_fire(course, xGoal, yGoal):
     dist = 0
     queue = []
@@ -113,6 +122,9 @@ def goal_fire(course, xGoal, yGoal):
 
     return course
 
+#This function grows all obstacles by 1ft in all directions. Ex: a 1x1 obstacle would turn into a 3x3 obstacle
+#Using this function before calculating the path ensures that there will be more space between the obstacles and the robot. This gives the robot more clearance in its path
+#It was not used in the final demo as we were confident in the accuracy of the robots pathing
 def expand_obstacles(course):
     queue = []
     
@@ -154,10 +166,12 @@ def expand_obstacles(course):
         
     return course
 
+#this function takes the path from goal_fire and the starting coordinates
+#it sees what the number is at the starting square, then continues looking for the next lowest number until it finally reaches the goal with a value of 0
+#it stores these coordinates in an array called Path
 def find_path(course, xStart, yStart, xGoal, yGoal):
-    #current coordinate
-    #I messed up all of my x and y coordinates throughtout this whole thing.
-    #it works though, so theres that I guess
+    #I had to fix the x and y coordinates here which is why I am assigning x to y and y to x at the start here
+    #current x and y coordinate
     xCurr = yStart
     yCurr = xStart
     curDist = int(course[xCurr][yCurr])
@@ -183,6 +197,8 @@ def find_path(course, xStart, yStart, xGoal, yGoal):
     
     return path
 
+#this takes the 'clean_course' which is a copy of the course when it only had start, goal, and obstacles
+#It also takes path, and then overlays the coordinates with the Path symbol onto the clean map showing the robots start, goal, obstacles, and path it will take to get there
 def overlay_path(course, path, xGoal, yGoal ):
     
     y, x = path.pop(0)
@@ -229,19 +245,22 @@ def copy_1d_array(original):
     
 def main(): 
     try:
+        #create base course
         course = create_map()
+        
         #add_obstacles(course)
         xStart, yStart, xGoal, yGoal = read_in_coordinates_from_file(course)
-        
+
+        #create a copy of the course with only start, goal, and obstacles marked. Will use later with overlay_path
         empty_course = copy_2d_array(course)
         
-        #next attempt to path course
+        #Add numbers to all grid cells representing their distance to goal
         course = goal_fire(course, xGoal, yGoal)
         
         #calculate path coordinates from start to goal
         path = find_path(course, xStart, yStart, xGoal, yGoal)
         
-        #print a clean path for visual purposes
+        #print a clean path from start to goal for visual purposes
         clean_course = overlay_path(empty_course, copy_1d_array(path), xGoal, yGoal)
         print_map(clean_course)
 
